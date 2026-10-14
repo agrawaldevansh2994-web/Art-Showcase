@@ -1,0 +1,260 @@
+/* ═══════════════ BIOLUMINESCENCE BAY — UI (own look since the 2026-10-07 redesign) ═══════════════ */
+* { margin: 0; padding: 0; box-sizing: border-box }
+html, body { width: 100%; height: 100%; overflow: hidden }
+body {
+    background: #0a0812;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+canvas { display: block }
+
+/* ── ENTRY OVERLAY ── */
+/* The entry screen is a title card laid over the live valley rather than a panel that
+   hides it — the gradient is heavy on the left where the text sits and clears to almost
+   nothing on the right, so the stage lights stay visible behind it. */
+#overlay {
+    position: fixed; inset: 0; z-index: 100;
+    /* Bay: the cove shows through the top two-thirds; the card rises out of dark water
+       at the bottom, centred — Goa's left-hand panel is gone. */
+    background: linear-gradient(0deg,
+        rgba(1, 8, 16, 0.97) 0%, rgba(2, 14, 26, 0.82) 34%, rgba(2, 14, 26, 0.12) 72%, rgba(0, 0, 0, 0) 100%);
+    text-align: center; cursor: pointer;
+    transition: opacity 1.4s ease;
+}
+#overlay.hidden { opacity: 0; pointer-events: none }
+#back-home{
+    position:absolute;top:1rem;left:1rem;z-index:2;
+    display:inline-flex;align-items:center;gap:0.4em;
+    font-size:0.72rem;letter-spacing:0.06em;
+    color:rgba(255,255,255,0.55);text-decoration:none;
+    padding:0.5em 0.9em;border:1px solid rgba(255,255,255,0.18);border-radius:3px;
+    background:rgba(0,0,0,0.25);cursor:pointer;
+    transition:color 0.2s ease,border-color 0.2s ease,background 0.2s ease;
+}
+#back-home:hover{color:#fff;border-color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.45)}
+
+/* The old overlay was opaque enough to bury the in-world chrome by accident. This one
+   deliberately shows the valley through it, so the HUD has to be hidden on purpose
+   until the player actually enters — otherwise the minimap and zone label sit on top
+   of the title card. (#clock, #crosshair and #audio-ctrl already default to none.) */
+body:has(#overlay:not(.hidden)) :is(#hud, #minimap, #hint, #zone-label) {
+    opacity: 0; pointer-events: none;
+}
+#hud, #minimap, #hint { transition: opacity 1.2s ease }
+
+.entry {
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    height: 100%; padding: clamp(26px, 4vw, 52px);
+}
+.entry-body { max-width: 40em; margin: 0 auto 2.2rem }
+
+.altitude {
+    font-size: 0.6rem; letter-spacing: 0.4em; font-weight: 500;
+    color: rgba(120, 220, 255, 0.8); margin-bottom: 1.2rem;
+}
+#overlay h1 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: clamp(2.3rem, 5.2vw, 4rem); font-weight: 400; font-style: italic;
+    letter-spacing: 0.01em; line-height: 1.02;
+    color: #e6f8ff; margin-bottom: 1.1rem;
+    text-shadow: 0 0 28px rgba(60, 200, 255, 0.55), 0 0 2px rgba(160, 240, 255, 0.8);
+}
+.rule {
+    width: 140px; height: 1px; margin: 0 auto 1.2rem;
+    background: linear-gradient(90deg, rgba(60, 200, 255, 0), rgba(60, 200, 255, 0.95), rgba(60, 200, 255, 0));
+}
+#overlay .sub {
+    font-size: 0.92rem; line-height: 1.75; letter-spacing: 0.005em;
+    color: rgba(200, 230, 244, 0.62); margin-bottom: 1.8rem;
+}
+
+.entry-foot { display: flex; flex-direction: column; align-items: center; gap: 0.7rem }
+#overlay .cta {
+    font-size: 0.8rem; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.75);
+    display: flex; align-items: center; gap: 0.6rem;
+}
+.cta-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #3cd8ff; box-shadow: 0 0 12px #3cd8ff;
+    animation: pulse 2.4s ease-in-out infinite;
+}
+#overlay .keys { font-size: 0.65rem; letter-spacing: 0.07em; color: rgba(255, 255, 255, 0.2) }
+@keyframes pulse { 0%, 100% { opacity: 0.35 } 50% { opacity: 1 } }
+
+/* Set loaders read as text links, not form controls — they are optional, and pills gave
+   them more weight than "click anywhere to enter", which is the actual primary action. */
+.track-uploaders { display: flex; align-items: baseline; justify-content: center; gap: 1.4rem; flex-wrap: wrap }
+.uploader-label { font-size: 0.58rem; letter-spacing: 0.28em; color: rgba(255, 255, 255, 0.3) }
+.track-uploader {
+    font-size: 0.86rem; color: rgba(234, 226, 244, 0.8);
+    padding-bottom: 3px; border-bottom: 1px solid rgba(60, 200, 255, 0.3);
+    cursor: pointer; transition: all 0.22s ease;
+}
+.track-uploader:hover { color: #fff; border-bottom-color: rgba(60, 200, 255, 0.95) }
+.track-uploader input { display: none }
+.track-uploader.loaded { color: #9fe8ff; border-bottom-color: #9fe8ff }
+.uploader-note { color: rgba(255, 255, 255, 0.26); font-size: 0.7rem; margin-top: 1rem }
+
+/* ── HUD ── */
+#hud {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    color: rgba(200, 236, 255, 0.62); font-size: 0.74rem; letter-spacing: 0.12em;
+    z-index: 50; pointer-events: none; text-align: center;
+    text-shadow: 0 0 14px rgba(40, 180, 255, 0.5);
+}
+#hud .warm { color: #ffb066 }
+#hud .cool { color: #7ae8ff }
+#hud .sep { opacity: 0.25; margin: 0 0.7em }
+
+/* ── CLOCK ── */
+#clock {
+    position: fixed; top: 16px; left: 18px; z-index: 50; pointer-events: none;
+    display: none; flex-direction: column; gap: 2px;
+    background: rgba(14, 10, 16, 0.48); border: 1px solid rgba(120, 200, 220, 0.18);
+    border-radius: 10px; padding: 8px 15px; backdrop-filter: blur(8px);
+}
+#clock-time { color: rgba(200, 240, 255, 0.92); font-size: 0.78rem; letter-spacing: 0.18em; font-weight: 600 }
+#clock-sub { color: rgba(255, 255, 255, 0.28); font-size: 0.62rem; letter-spacing: 0.14em }
+
+/* ── ZONE LABEL ── */
+#zone-label {
+    position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.82); font-size: 1.35rem; letter-spacing: 0.28em;
+    text-shadow: 0 0 24px rgba(40, 190, 255, 0.6);
+    z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.9s ease;
+    white-space: nowrap;
+}
+#zone-label.show { opacity: 1 }
+
+/* ── INTERACT PROMPT ── */
+#prompt {
+    position: fixed; bottom: 122px; left: 50%; transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.9); font-size: 0.92rem; letter-spacing: 0.16em;
+    text-shadow: 0 0 16px rgba(0, 240, 255, 0.55);
+    z-index: 55; pointer-events: none; opacity: 0; transition: opacity 0.35s ease;
+    white-space: nowrap;
+}
+#prompt.show { opacity: 1; animation: promptPulse 2s ease-in-out infinite }
+@keyframes promptPulse {
+    0%, 100% { transform: translateX(-50%) scale(1) }
+    50% { transform: translateX(-50%) scale(1.035) }
+}
+
+/* ── TOAST ── */
+#toast {
+    position: fixed; bottom: 165px; left: 50%; transform: translateX(-50%) translateY(8px);
+    color: #fff; font-size: 0.84rem; letter-spacing: 0.1em; z-index: 56;
+    background: rgba(28, 16, 12, 0.72); border: 1px solid rgba(255, 175, 100, 0.35);
+    border-radius: 999px; padding: 9px 22px; backdrop-filter: blur(10px);
+    pointer-events: none; opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+    white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0) }
+
+/* ── SHORTCUTS ── */
+#shortcuts-guide { position: fixed; top: 16px; right: 200px; z-index: 50; display: flex; justify-content: flex-end }
+#shortcuts-guide .list {
+    list-style: none; background: rgba(12, 8, 14, 0.9);
+    border: 1px solid rgba(120, 200, 220, 0.38); border-radius: 10px; padding: 14px 16px;
+    opacity: 0; pointer-events: none; transform: translateY(-8px);
+    transition: all 0.3s ease; backdrop-filter: blur(10px);
+    column-count: 3; column-gap: 26px; max-height: 80vh;
+}
+#shortcuts-guide .list.visible { opacity: 1; pointer-events: all; transform: translateY(0) }
+#shortcuts-guide .list li {
+    color: rgba(235, 228, 255, 0.7); font-size: 0.72rem; margin-bottom: 6px;
+    display: flex; justify-content: space-between; gap: 18px; break-inside: avoid;
+}
+#shortcuts-guide .list li span {
+    color: #ffb055; font-weight: 700; font-size: 0.68rem;
+    letter-spacing: 0.06em; min-width: 3.6em;
+}
+
+/* ── MINIMAP ── */
+#minimap {
+    position: fixed; top: 16px; right: 16px; width: 170px; height: 170px;
+    background: rgba(6, 12, 18, 0.66); border: 1px solid rgba(120, 200, 220, 0.30);
+    border-radius: 10px; z-index: 50; backdrop-filter: blur(5px);
+    cursor: pointer; transition: all 0.35s ease; overflow: hidden;
+}
+#minimap.expanded {
+    width: 64vmin; height: 64vmin; top: 50%; right: auto; left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(150, 220, 235, 0.75);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 140, 60, 0.32);
+}
+#minimap canvas { width: 100%; height: 100%; display: block; border-radius: 9px }
+
+/* ── AUDIO CONTROL ── */
+#audio-ctrl {
+    position: fixed; bottom: 18px; right: 18px; z-index: 50;
+    display: none; align-items: center; gap: 9px;
+}
+#audio-ctrl button {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid rgba(120, 200, 220, 0.32); background: rgba(14, 10, 16, 0.58);
+    color: #fff; font-size: 1rem; cursor: pointer; backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; transition: all 0.25s;
+}
+#audio-ctrl button:hover { background: rgba(255, 150, 70, 0.25) }
+#audio-ctrl input[type=range] { width: 84px; accent-color: #ff7a2a; opacity: 0.65 }
+
+/* ── HINT / CROSSHAIR / VIGNETTE / FLASH ── */
+#hint {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.18); font-size: 0.68rem; letter-spacing: 0.06em;
+    z-index: 50; pointer-events: none;
+}
+#crosshair {
+    position: fixed; top: 50%; left: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+    border-radius: 50%; background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+    display: none; z-index: 52; pointer-events: none;
+}
+#vignette {
+    position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 46%, rgba(0, 0, 0, 0.62) 100%);
+}
+#flash {
+    position: fixed; inset: 0; z-index: 60; pointer-events: none;
+    background: #fff; opacity: 0; transition: opacity 0.9s ease;
+}
+#flash.on { opacity: 0.85; transition: opacity 0.12s ease }
+
+/* Under the surface. The scene fog already goes green-blue; this is the bit of it that
+   reads as being inside the water rather than looking at it — heavy at the edges, and
+   opacity is driven per-frame from controls.getSubmerged(), not by a class. */
+#underwater {
+    position: fixed; inset: 0; z-index: 41; pointer-events: none; opacity: 0;
+    background:
+        radial-gradient(ellipse at center, rgba(20, 120, 130, 0.10) 20%, rgba(4, 46, 58, 0.72) 100%),
+        linear-gradient(180deg, rgba(70, 190, 200, 0.14), rgba(2, 26, 38, 0.30));
+}
+
+body.playing #clock,
+body.playing #audio-ctrl { display: flex }
+body.playing #crosshair { display: block }
+
+/* ── CONTEXT CONTROLS CARD (2026-10-07) ──
+   Pops up on the left when you walk near the kayaks or the surf rack, and stays while
+   you are on one, listing that feature's controls. */
+#ctx-card {
+    position: fixed; right: 14px; top: 196px; transform: translate(10px, 0); z-index: 52;
+    max-width: 196px; padding: 9px 11px 8px;
+    background: rgba(6, 18, 26, 0.72); border: 1px solid rgba(90, 230, 255, 0.32);
+    border-radius: 10px; backdrop-filter: blur(8px); color: rgba(225, 248, 255, 0.82);
+    font-size: 0.64rem; pointer-events: none; opacity: 0; transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 0 16px rgba(60, 220, 255, 0.12);
+}
+#ctx-card.show { opacity: 1; transform: translate(0, 0) }
+#ctx-card h4 { margin: 0 0 3px; color: #6fe8ff; font-size: 0.66rem; letter-spacing: 0.16em }
+#ctx-card p { margin: 0 0 6px; opacity: 0.65; line-height: 1.3; font-size: 0.6rem }
+#ctx-card ul { list-style: none; margin: 0; padding: 0 }
+#ctx-card li { display: flex; gap: 7px; margin-bottom: 3px; line-height: 1.25 }
+#ctx-card li span { color: #ffb055; font-weight: 700; min-width: 4.6em; font-size: 0.58rem; letter-spacing: 0.04em; white-space: nowrap }
+#ctx-card .stat { margin-top: 5px; color: #9dffc8; font-weight: 600; letter-spacing: 0.06em }
+#ctx-card .hint { margin-top: 5px; font-size: 0.54rem; opacity: 0.4; letter-spacing: 0.1em; text-align: right }
+#ctx-card.mini { padding: 5px 9px; border-radius: 999px; max-width: none; font-size: 0.6rem; letter-spacing: 0.08em }
+#ctx-card.mini b { color: #6fe8ff; font-weight: 700 }
+#ctx-card.mini i { font-style: normal; margin-left: 8px; padding: 0 5px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; opacity: 0.6 }
+#shortcuts-guide .list li.sec { color: #6fe8ff; font-weight: 700; letter-spacing: 0.14em; margin-top: 6px }

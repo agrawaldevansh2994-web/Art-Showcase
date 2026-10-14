@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bioluminescence Bay — the sea that lights up</title>
+    <meta name="description" content="A hidden cove at night where every wave, footstep and swimmer lights the water electric blue. A driftwood stage on the dune, a DJ on a raft in the bay. Free in your browser.">
+    <!-- Share previews: TODO before launch — og:image needs a real still in landing/og/bay.jpg (see CLAUDE.md §9). -->
+    <meta property="og:site_name" content="Playa Art">
+    <meta property="og:title" content="Bioluminescence Bay">
+    <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+
+<div id="overlay">
+    <a id="back-home" href="/" onclick="event.stopPropagation()">&larr; All Worlds</a>
+    <div class="entry">
+        <div class="entry-body">
+            <div class="altitude">NEW MOON &nbsp;&middot;&nbsp; THE PLANKTON ARE IN &nbsp;&middot;&nbsp; 25 M ABOVE THE WATER</div>
+            <h1>Bioluminescence Bay</h1>
+            <div class="rule"></div>
+            <p class="sub">
+                You are standing on the cliff above a cove where the sea turns to light. Every wave,<br>
+                footstep and swimmer down there leaves a trail of electric blue. Follow the red lamps<br>
+                down. There is a cave of glowing nets in the dunes, and a DJ on a raft you can swim out to.
+            </p>
+
+            <div class="track-uploaders">
+                <span class="uploader-label">BRING YOUR OWN SETS</span>
+                <label class="track-uploader" id="lbl-stage">The Net Cave<input type="file" id="audio-stage" accept="audio/*"></label>
+                <label class="track-uploader" id="lbl-raft">The Raft<input type="file" id="audio-raft" accept="audio/*"></label>
+            </div>
+            <div class="uploader-note">Leave them empty and the resident DJs play a live procedural set.</div>
+        </div>
+
+        <div class="entry-foot">
+            <div class="cta"><span class="cta-dot"></span> Click anywhere to step up to the rail</div>
+            <div class="keys">WASD move &middot; Mouse look &middot; SHIFT run &middot; E climb aboard &middot; K for all shortcuts</div>
+        </div>
+    </div>
+</div>
+
+<div id="hud"></div>
+<div id="zone-label"></div>
+<div id="clock">
+    <span id="clock-time">NIGHT</span>
+    <span id="clock-sub">day 1</span>
+</div>
+<div id="toast"></div>
+<div id="prompt"></div>
+<div id="hint">WASD / arrows move &middot; SHIFT run &middot; E interact &middot; T teleport (surf, kayaks) &middot; G dance &middot; X glow tide &middot; M map &middot; K shortcuts</div>
+<div id="crosshair"></div>
+<div id="vignette"></div>
+<div id="underwater"></div>
+<div id="flash"></div>
+
+<div id="shortcuts-guide">
+    <ul class="list" id="shortcuts-list">
+        <li><span>WASD / ↑↓←→</span> Move</li>
+        <li><span>SHIFT</span> Run / swim faster</li>
+        <li><span>MOUSE</span> Look</li>
+        <li><span>CTRL</span> Dive (in the water)</li>
+        <li><span>SPACE</span> Surface</li>
+        <li><span>E</span> Interact / Ride / Get off</li>
+        <li><span>R</span> Horn</li>
+        <li><span>Q</span> Auto-steer walking</li>
+        <li><span>F</span> Head Torch</li>
+        <li><span>G</span> Dance</li>
+        <li><span>V</span> Sling a hammock</li>
+        <li><span>L</span> Light a lamp</li>
+        <li><span>T</span> Teleport (cycles places)</li>
+        <li><span>X</span> Glow Tide</li>
+        <li><span>C</span> Squall off the sea</li>
+        <li><span>N</span> Freeze / Resume Time</li>
+        <li><span>&lt; &gt;</span> Scrub Time of Day</li>
+        <li><span>M</span> Toggle Map</li>
+        <li><span>K</span> Toggle Shortcuts</li>
+        <li><span>H</span> Hide / show info cards</li>
+        <li><span>ESC</span> Pause</li>
+        <li class="sec">KAYAK</li>
+        <li><span>E</span> Get in / out (green glow stick)</li>
+        <li><span>W / ↑</span> Paddle</li>
+        <li><span>S / ↓</span> Back paddle</li>
+        <li><span>A D / ← →</span> Turn</li>
+        <li><span>SHIFT</span> Sprint paddle</li>
+        <li class="sec">SURF BREAK</li>
+        <li><span>E</span> Grab / drop a board (rack south of the Rocks)</li>
+        <li><span>W / ↑</span> Paddle · on a wave: climb the face</li>
+        <li><span>S / ↓</span> On a wave: drop down the face</li>
+        <li><span>A D / ← →</span> Turn · on a wave: carve</li>
+        <li><span>HOLD W</span> Facing the beach as a wave lifts you = pop up</li>
+        <li><span>SHIFT</span> Paddle harder · on a wave: pump for speed</li>
+    </ul>
+</div>
+<div id="ctx-card"></div>
+
+<div id="minimap">
+    <canvas id="minimap-canvas" width="170" height="170"></canvas>
+</div>
+
+<div id="audio-ctrl">
+    <button id="mute-btn" title="Mute">&#9835;</button>
+    <input type="range" id="vol-slider" min="0" max="100" value="55" title="Volume">
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
